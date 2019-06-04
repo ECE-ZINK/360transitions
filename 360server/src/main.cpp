@@ -4,6 +4,7 @@
 */
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
 #include "httplib.h"
 
 std::thread* networkTraceThread;
@@ -100,16 +101,49 @@ int main(int argc, char* argv[])
 {
 	using namespace httplib;
 
-	if (argc != 2)
+        int opt = 0;
+	int port = 80; // Set to default port 80 if no port is specified at command line
+	char *hostname = NULL;
+        enum { CHARACTER_MODE, WORD_MODE, LINE_MODE } mode = CHARACTER_MODE;
+
+	if (argc < 2)
 	{
 		std::cout << "Start with www directory path as argument." << std::endl;
 		return -1;
 	}
 
-	std::cout << "www directory: " << argv[1] << std::endl;
+        while ((opt = getopt(argc, argv, "p:h:?")) != -1) {
+        	switch (opt) {
+		case 'p': 
+			// std::cout << "-p" << optarg << std::endl;
+			port = atoi(optarg);
+			break;
+        	case 'h': 
+			hostname = optarg;
+			// std::cout << "-h" << optarg << std::endl;
+			// printf(“port: %s\n”, optarg);
+                        break;
+		case '?':
+			if (optopt == 'p')
+          			fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+			else if (optopt == 'h')
+          			fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        		else if (isprint (optopt))
+          			fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        		else
+          			fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+        		return 1;
+        	default:
+            		fprintf(stderr, "Usage: %s [-p port] [-h hostname] www_dir_path\n", argv[0]);
+            		exit(EXIT_FAILURE);
+        	}
+    	}
 
+        std::cout << argv[argc-1] << std::endl;
 	Server sv;
-	sv.set_base_dir(argv[1]);
+	sv.set_base_dir(argv[argc-1]);
+	sv.set_host_name(hostname);
+        sv.set_port(port);
 	sv.Get("/cntrl", [](const Request& req, Response& res) {
 		std::string cntrlContent;
 		cntrlContent.resize(httplib::bandwidth / 10 + 1, 'c');
@@ -134,8 +168,11 @@ int main(int argc, char* argv[])
 		res.set_content("ok", "text/plain");
 	});
 
-	std::cout << "Listening on port 80" << std::endl;
-	std::thread([&sv]() { sv.listen("localhost", 80); }).detach();
+	std::cout << "Starting Web Server on port " << port << ", root directory " << argv[argc-1] << std::endl;
+	std::cout << "Listening on port " << port << std::endl;
+	// std::thread([&sv]() { sv.listen("localhost", 80); }).detach();
+	std::thread([&sv]() { sv.listen(); }).detach();
+	// std::thread([&sv]() { sv.listen(hostname, 7777); }).detach();
 
 	while (true)
 	{

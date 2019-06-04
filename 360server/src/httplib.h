@@ -223,6 +223,8 @@ namespace httplib
 		Server& Options(const char* pattern, Handler handler);
 
 		bool set_base_dir(const char* path);
+		bool set_host_name(const char* hname);
+		bool set_port(int port);
 
 		void set_error_handler(Handler handler);
 		void set_logger(Logger logger);
@@ -233,6 +235,7 @@ namespace httplib
 		bool listen_after_bind();
 
 		bool listen(const char* host, int port, int socket_flags = 0);
+		bool listen(int socket_flags = 0);
 
 		bool is_running() const;
 		void stop();
@@ -259,8 +262,10 @@ namespace httplib
 		virtual bool read_and_close_socket(socket_t sock);
 
 		bool        is_running_;
+		int	    port_;
 		socket_t    svr_sock_;
 		std::string base_dir_;
+		const char* host_name_;
 		Handlers    get_handlers_;
 		Handlers    post_handlers_;
 		Handlers    put_handlers_;
@@ -1537,6 +1542,18 @@ namespace httplib
 		return false;
 	}
 
+	inline bool Server::set_host_name(const char* hname)
+	{
+		host_name_ = hname;
+ 		return true;
+	}
+
+	inline bool Server::set_port(int port)
+	{
+		port_ = port;
+ 		return true;
+	}
+
 	inline void Server::set_error_handler(Handler handler)
 	{
 		error_handler_ = handler;
@@ -1564,6 +1581,13 @@ namespace httplib
 	inline bool Server::listen(const char* host, int port, int socket_flags)
 	{
 		if (bind_internal(host, port, socket_flags) < 0)
+			return false;
+		return listen_internal();
+	}
+	
+	inline bool Server::listen(int socket_flags)
+	{
+		if (bind_internal(host_name_, port_, socket_flags) < 0)
 			return false;
 		return listen_internal();
 	}
