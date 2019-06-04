@@ -4,6 +4,8 @@ Server for video data delivery.
 
 Build with `g++ main.cpp -pthread -o 360server`
 
+On Linux build with `g++ main.cpp -std=c++11 -pthread -o 360server`
+
 Run with `./360server [pathToWWWDirectory]`
 
 ### www directory
