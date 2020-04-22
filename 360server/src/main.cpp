@@ -168,11 +168,11 @@ int main(int argc, char* argv[])
 		res.set_content("ok", "text/plain");
 	});
 
-	std::cout << "Starting Web Server on port " << port << ", root directory " << argv[argc-1] << std::endl;
-	std::cout << "Listening on port " << port << std::endl;
+	std::cout << "Starting Web Server on port " << port << ", host name " << hostname << ", root directory " << argv[argc-1] << std::endl;
+	// std::cout << "Listening on port " << port << std::endl;
 	// std::thread([&sv]() { sv.listen("localhost", 80); }).detach();
 	std::thread([&sv]() { sv.listen(); }).detach();
-	// std::thread([&sv]() { sv.listen(hostname, 7777); }).detach();
+	// std::thread([&sv]() { sv.listen("localhost", 7777); }).detach();
 
 	while (true)
 	{
